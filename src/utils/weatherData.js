@@ -164,23 +164,48 @@ export const CITY_TO_PREFECTURE = {
 export const normalizeLocation = (input) => {
   if (!input) return null;
   
-  // まず、都市名マッピングをチェック
-  const cityMatch = Object.keys(CITY_TO_PREFECTURE).find(city => input.includes(city));
+  // 最長一致を見つけるためのヘルパー関数
+  const findLongestMatch = (candidates, matchFn) => {
+    let longestMatch = null;
+    let longestLength = 0;
+    
+    for (const candidate of candidates) {
+      const matchLength = matchFn(candidate);
+      if (matchLength > longestLength) {
+        longestLength = matchLength;
+        longestMatch = candidate;
+      }
+    }
+    
+    return longestMatch;
+  };
+  
+  // 1. 都市名マッピングをチェック（最長一致を優先）
+  const cityMatch = findLongestMatch(
+    Object.keys(CITY_TO_PREFECTURE),
+    (city) => input.includes(city) ? city.length : 0
+  );
   if (cityMatch) {
     return CITY_TO_PREFECTURE[cityMatch];
   }
   
-  // 都道府県名の直接マッチをチェック
-  const prefMatch = Object.keys(REAL_WEATHER_DATA).find(pref => input.includes(pref));
+  // 2. 都道府県名の直接マッチをチェック（最長一致を優先）
+  const prefMatch = findLongestMatch(
+    Object.keys(REAL_WEATHER_DATA),
+    (pref) => input.includes(pref) ? pref.length : 0
+  );
   if (prefMatch) {
     return prefMatch;
   }
   
-  // 「県」「府」「都」「道」なしでもマッチするようにする
-  const shortMatch = Object.keys(REAL_WEATHER_DATA).find(pref => {
-    const short = pref.replace(/[都道府県]$/, '');
-    return input.includes(short) && short.length > 0;
-  });
+  // 3. 「県」「府」「都」「道」なしでもマッチするようにする（最長一致を優先）
+  const shortMatch = findLongestMatch(
+    Object.keys(REAL_WEATHER_DATA),
+    (pref) => {
+      const short = pref.replace(/[都道府県]$/, '');
+      return (input.includes(short) && short.length > 0) ? short.length : 0;
+    }
+  );
   
   return shortMatch || null;
 };
