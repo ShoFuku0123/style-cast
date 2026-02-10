@@ -116,9 +116,9 @@ const App = () => {
       flexDirection: 'column'
     }}>
       {/* Search Bar */}
-      <div style={{ padding: '24px 24px 8px', display: 'flex', gap: '8px', zIndex: 10 }}>
+      <div style={{ padding: '16px 16px 6px', display: 'flex', gap: '8px', zIndex: 10 }}>
         <div className="glass" style={{ 
-          flex: 1, display: 'flex', alignItems: 'center', padding: '10px 16px', gap: '8px',
+          flex: 1, display: 'flex', alignItems: 'center', padding: '8px 12px', gap: '6px',
           background: theme.glass, border: `1px solid ${theme.subtext}`
         }}>
           <MapPin size={16} color={theme.subtext} />
@@ -147,7 +147,7 @@ const App = () => {
       </div>
 
       {/* Progress Indicators */}
-      <div style={{ display: 'flex', gap: '6px', padding: '12px 24px', zIndex: 10 }}>
+      <div style={{ display: 'flex', gap: '6px', padding: '8px 16px', zIndex: 10 }}>
         {[0, 1, 2].map((i) => (
           <div key={i} style={{ flex: 1, height: '3px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', overflow: 'hidden' }}>
             <motion.div 
@@ -162,7 +162,7 @@ const App = () => {
         ))}
       </div>
 
-      <main style={{ flex: 1, padding: '8px 24px 30px', display: 'flex', flexDirection: 'column' }}>
+      <main style={{ flex: 1, padding: '6px 16px 16px', display: 'flex', flexDirection: 'column' }}>
         {/* Story Card */}
         <div 
           onClick={nextPage}
@@ -201,21 +201,21 @@ const App = () => {
                 zIndex: -1 
               }} />
               
-              <div style={{ padding: '40px 24px', color: '#fff' }}>
+              <div style={{ padding: '24px 20px', color: '#fff' }}>
                 <span style={{ 
-                  fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '4px', color: 'rgba(255,255,255,0.7)',
-                  marginBottom: '12px', display: 'block'
+                  fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '3px', color: 'rgba(255,255,255,0.7)',
+                  marginBottom: '8px', display: 'block'
                 }}>
                   {pageContent.category}
                 </span>
-                <h2 style={{ fontSize: '2rem', marginTop: '4px', lineHeight: 1.3, fontWeight: 700, fontFamily: "'Playfair Display', serif" }}>
+                <h2 style={{ fontSize: '1.6rem', marginTop: '4px', lineHeight: 1.2, fontWeight: 700, fontFamily: "'Playfair Display', serif" }}>
                   {pageContent.title}
                 </h2>
-                <p style={{ fontSize: '0.95rem', opacity: 0.85, marginTop: '16px', lineHeight: 1.7, maxWidth: '90%' }}>
+                <p style={{ fontSize: '0.85rem', opacity: 0.85, marginTop: '12px', lineHeight: 1.5, maxWidth: '90%' }}>
                   {pageContent.description}
                 </p>
                 
-                <div style={{ display: 'flex', gap: '24px', marginTop: '30px' }}>
+                <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
                   {pageContent.metrics.map((m, i) => (
                     <div key={i} style={{ borderLeft: '1px solid rgba(255,255,255,0.3)', paddingLeft: '12px' }}>
                       <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>{m.label}</div>
@@ -230,7 +230,7 @@ const App = () => {
 
         {/* Real-time Data Bar */}
         <section className="glass" style={{ 
-          marginTop: '20px', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          marginTop: '12px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           background: theme.glass, border: `1px solid ${theme.subtext}`
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
