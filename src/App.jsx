@@ -96,7 +96,7 @@ const FETCH_WEATHER_FOR_LOCATION = (location) => {
 };
 
 const App = () => {
-  const [locationInput, setLocationInput] = useState('東京都');
+  const [locationInput, setLocationInput] = useState('');
   const [weather, setWeather] = useState(FETCH_WEATHER_FOR_LOCATION('東京都'));
   const [currentPage, setCurrentPage] = useState(0); // 0: Style, 1: Care, 2: Emo
   const [isAnimating, setIsAnimating] = useState(false);
@@ -104,9 +104,9 @@ const App = () => {
   // Sync weather on location change
   const handleSearch = (e) => {
     if (e.key === 'Enter' || e.type === 'click') {
-      const data = FETCH_WEATHER_FOR_LOCATION(locationInput);
+      const data = FETCH_WEATHER_FOR_LOCATION(locationInput || '東京都');
       setWeather(data);
-      setLocationInput(data.location); // Normalize the input text to the found prefecture
+      setLocationInput(''); // Clear input after search
       setCurrentPage(0); // Reset to first page when searching
     }
   };
