@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wind, Sun, CloudRain, Sparkles, MapPin, ChevronRight, Moon, Cloud, Search, Droplets } from 'lucide-react';
 import { getPageContent, getWeatherTheme } from './utils/weatherLogic';
+import { getRealWeatherData, normalizeLocation } from './utils/weatherData';
 
 const PREFECTURES = [
   '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
@@ -27,13 +28,10 @@ const NORMALIZE_LOCATION = (input) => {
   return found;
 };
 
-// Mock WNI-like API Simulation
-const FETCH_WEATHER_FOR_LOCATION = (location) => {
-  const normalized = NORMALIZE_LOCATION(location) || '東京都';
+// Mock WNI-like API Simulation (Fallback for locations without real data)
+const FETCH_MOCK_WEATHER = (normalized) => {
   const index = PREFECTURES.indexOf(normalized);
   
-  // Deterministic "variation" based on index
-  // Distribution: 0-15: Sunny group, 16-30: Cloudy/Rainy group, 31-46: Mixed
   let condition = 'Sunny';
   let temp = 20;
   let humidity = 40;
@@ -42,25 +40,24 @@ const FETCH_WEATHER_FOR_LOCATION = (location) => {
 
   if (index % 3 === 0) {
     condition = 'Sunny';
-    temp = 22 + (index % 10); // 22 to 31
+    temp = 22 + (index % 10);
     humidity = 35 + (index % 15);
   } else if (index % 3 === 1) {
     condition = 'Cloudy';
-    temp = 15 + (index % 12); // 15 to 26
+    temp = 15 + (index % 12);
     humidity = 55 + (index % 20);
     sunshine = 0.2;
   } else {
     condition = 'Rainy';
-    temp = 8 + (index % 10); // 8 to 17
+    temp = 8 + (index % 10);
     humidity = 75 + (index % 15);
     wind = 4.0 + (index % 5);
     sunshine = 0.0;
   }
 
-  // Geographic adjustments
-  if (index < 7) { // Hokkaido/Tohoku (Cooler)
+  if (index < 7) {
     temp -= 8;
-  } else if (index > 40) { // Kyushu/Okinawa (Warmer)
+  } else if (index > 40) {
     temp += 6;
   }
 
@@ -73,6 +70,29 @@ const FETCH_WEATHER_FOR_LOCATION = (location) => {
     location: normalized, 
     hour: 10 + (index % 8) 
   };
+};
+
+// Main weather fetching function
+const FETCH_WEATHER_FOR_LOCATION = (location) => {
+  // Try to get real weather data first
+  const realData = getRealWeatherData(location);
+  
+  if (realData) {
+    // Real data exists - use it
+    return {
+      temp: realData.temp,
+      wind: realData.wind,
+      humidity: realData.humidity,
+      condition: realData.condition,
+      sunshine: realData.sunshine,
+      location: realData.location,
+      hour: new Date().getHours() // Use current hour
+    };
+  }
+  
+  // Fall back to mock data for locations without real data
+  const normalized = normalizeLocation(location) || NORMALIZE_LOCATION(location) || '東京都';
+  return FETCH_MOCK_WEATHER(normalized);
 };
 
 const App = () => {
