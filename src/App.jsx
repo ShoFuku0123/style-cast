@@ -97,7 +97,16 @@ const FETCH_WEATHER_FOR_LOCATION = (location) => {
 
 const App = () => {
   const [locationInput, setLocationInput] = useState('');
-  const [weather, setWeather] = useState(FETCH_WEATHER_FOR_LOCATION('東京都'));
+  // ファーストビューは未入力で、モックの晴れ画面を表示
+  const [weather, setWeather] = useState({
+    temp: 22,
+    wind: 2.0,
+    humidity: 40,
+    condition: 'Sunny',
+    sunshine: 1.0,
+    location: '東京都',
+    hour: new Date().getHours()
+  });
   const [currentPage, setCurrentPage] = useState(0); // 0: Style, 1: Care, 2: Emo
   const [isAnimating, setIsAnimating] = useState(false);
 
