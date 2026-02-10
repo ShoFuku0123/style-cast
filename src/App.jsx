@@ -164,10 +164,7 @@ const App = () => {
 
       <main style={{ flex: 1, padding: '6px 16px 16px', display: 'flex', flexDirection: 'column' }}>
         {/* Story Card */}
-        <div 
-          onClick={nextPage}
-          style={{ cursor: 'pointer', flex: 1, position: 'relative' }}
-        >
+        <div onClick={nextPage} style={{ cursor: 'pointer', flex: 1, position: 'relative' }}>
           <AnimatePresence mode="wait">
             <motion.div 
               key={`${weather.location}-${currentPage}`}
