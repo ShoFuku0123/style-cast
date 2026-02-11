@@ -1,4 +1,7 @@
-// 実際の天気データ
+import { PREFECTURE_COORDINATES } from './coordinatesData';
+import { fetchWeatherFromAPI } from './weatherAPI';
+
+// 実際の天気データ（フォールバック用）
 export const REAL_WEATHER_DATA = {
   '北海道': {
     condition: 'Rainy', // 曇り時々雨か雪
@@ -168,19 +171,34 @@ export const normalizeLocation = (input) => {
   
   // ===== ステップ1: 完全一致を最優先 =====
   
-  // 1-1. 都市名の完全一致
+  // 1-1. 都道府県名の完全一致 (coordinatesDataを正とする)
+  if (PREFECTURE_COORDINATES[trimmedInput]) {
+    return trimmedInput;
+  }
+
+  // 1-2. 都市名の完全一致
   if (CITY_TO_PREFECTURE[trimmedInput]) {
     return CITY_TO_PREFECTURE[trimmedInput];
   }
   
-  // 1-2. 都道府県名の完全一致
+  // 1-3. フォールバックデータの一致
   if (REAL_WEATHER_DATA[trimmedInput]) {
     return trimmedInput;
   }
+
+  // ===== ステップ2: 省略形（県なし）での一致 =====
+  // 47都道府県すべてに対して、「都」「道」「府」「県」を除いた名前でチェック
+  const shortMatch = Object.keys(PREFECTURE_COORDINATES).find(pref => {
+    const shortName = pref.replace(/(都|道|府|県)$/, '');
+    return trimmedInput === shortName;
+  });
+  if (shortMatch) {
+    return shortMatch;
+  }
   
-  // ===== ステップ2: 前方一致（開始位置でマッチ） =====
+  // ===== ステップ3: 前方一致（開始位置でマッチ） =====
   
-  // 2-1. 都市名の前方一致
+  // 3-1. 都市名の前方一致
   const cityStartMatch = Object.keys(CITY_TO_PREFECTURE).find(city => 
     trimmedInput.startsWith(city) || city.startsWith(trimmedInput)
   );
@@ -188,15 +206,15 @@ export const normalizeLocation = (input) => {
     return CITY_TO_PREFECTURE[cityStartMatch];
   }
   
-  // 2-2. 都道府県名の前方一致
-  const prefStartMatch = Object.keys(REAL_WEATHER_DATA).find(pref => 
+  // 3-2. 都道府県名の前方一致
+  const prefStartMatch = Object.keys(PREFECTURE_COORDINATES).find(pref => 
     trimmedInput.startsWith(pref) || pref.startsWith(trimmedInput)
   );
   if (prefStartMatch) {
     return prefStartMatch;
   }
   
-  // ===== ステップ3: 部分一致（最長一致を優先） =====
+  // ===== ステップ4: 部分一致（最長一致を優先） =====
   
   // 最長一致を見つけるヘルパー関数
   const findLongestMatch = (candidates, matchFn) => {
@@ -214,7 +232,7 @@ export const normalizeLocation = (input) => {
     return longestMatch;
   };
   
-  // 3-1. 都市名の部分一致
+  // 4-1. 都市名の部分一致
   const cityPartialMatch = findLongestMatch(
     Object.keys(CITY_TO_PREFECTURE),
     (city) => trimmedInput.includes(city) || city.includes(trimmedInput) ? city.length : 0
@@ -223,9 +241,9 @@ export const normalizeLocation = (input) => {
     return CITY_TO_PREFECTURE[cityPartialMatch];
   }
   
-  // 3-2. 都道府県名の部分一致
+  // 4-2. 都道府県名の部分一致
   const prefPartialMatch = findLongestMatch(
-    Object.keys(REAL_WEATHER_DATA),
+    Object.keys(PREFECTURE_COORDINATES),
     (pref) => trimmedInput.includes(pref) || pref.includes(trimmedInput) ? pref.length : 0
   );
   if (prefPartialMatch) {
@@ -251,4 +269,44 @@ export const getRealWeatherData = (location) => {
     ...data,
     location: prefecture
   };
+};
+
+/**
+ * リアルタイム天気データを取得(API優先、失敗時はモック/静的データ)
+ * @param {string} location 
+ */
+export const fetchLiveWeatherData = async (location) => {
+  const prefecture = normalizeLocation(location);
+  if (!prefecture) return null;
+  
+  // 緯度経度を取得
+  const coords = PREFECTURE_COORDINATES[prefecture];
+  
+  // API呼び出し (座標がある場合)
+  if (coords) {
+    try {
+      const apiData = await fetchWeatherFromAPI(coords.lat, coords.lon);
+      if (apiData) {
+        return {
+          ...apiData,
+          location: prefecture,
+          description: apiData.condition === 'Sunny' ? '絶好のお出かけ日和です' : 
+                       apiData.condition === 'Rainy' ? '傘を持ってお出かけください' : '過ごしやすい気候です'
+        };
+      }
+    } catch (e) {
+      console.warn('API fetch failed, falling back to static data', e);
+    }
+  }
+
+  // APIデータがない、または失敗した場合は既存の静的データを返す
+  const staticData = REAL_WEATHER_DATA[prefecture];
+  if (staticData) {
+    return {
+      ...staticData,
+      location: prefecture
+    };
+  }
+  
+  return null;
 };

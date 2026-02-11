@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wind, Sun, CloudRain, Sparkles, MapPin, ChevronRight, Moon, Cloud, Search, Droplets } from 'lucide-react';
+import { Wind, Sun, CloudRain, Sparkles, MapPin, ChevronRight, Moon, Cloud, Search, Droplets, Loader } from 'lucide-react';
 import { getPageContent, getWeatherTheme } from './utils/weatherLogic';
-import { getRealWeatherData, normalizeLocation } from './utils/weatherData';
+import { getRealWeatherData, normalizeLocation, fetchLiveWeatherData } from './utils/weatherData';
 
 const PREFECTURES = [
   '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
@@ -73,19 +73,19 @@ const FETCH_MOCK_WEATHER = (normalized) => {
 };
 
 // Main weather fetching function
-const FETCH_WEATHER_FOR_LOCATION = (location) => {
-  // Try to get real weather data first
-  const realData = getRealWeatherData(location);
+const FETCH_WEATHER_FOR_LOCATION = async (location) => {
+  // Try to get real/live weather data first
+  const liveData = await fetchLiveWeatherData(location);
   
-  if (realData) {
-    // Real data exists - use it
+  if (liveData) {
+    // Real/API data exists - use it
     return {
-      temp: realData.temp,
-      wind: realData.wind,
-      humidity: realData.humidity,
-      condition: realData.condition,
-      sunshine: realData.sunshine,
-      location: realData.location,
+      temp: liveData.temp,
+      wind: liveData.wind,
+      humidity: liveData.humidity,
+      condition: liveData.condition,
+      sunshine: liveData.sunshine,
+      location: liveData.location,
       hour: new Date().getHours() // Use current hour
     };
   }
@@ -97,6 +97,8 @@ const FETCH_WEATHER_FOR_LOCATION = (location) => {
 
 const App = () => {
   const [locationInput, setLocationInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
   // ファーストビューは未入力で、モックの晴れ画面を表示
   const [weather, setWeather] = useState({
     temp: 22,
@@ -111,12 +113,19 @@ const App = () => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Sync weather on location change
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     if (e.key === 'Enter' || e.type === 'click') {
-      const data = FETCH_WEATHER_FOR_LOCATION(locationInput || '東京都');
-      setWeather(data);
-      setLocationInput(''); // Clear input after search
-      setCurrentPage(0); // Reset to first page when searching
+      setIsLoading(true);
+      try {
+        const data = await FETCH_WEATHER_FOR_LOCATION(locationInput || '東京都');
+        setWeather(data);
+        setLocationInput(''); // Clear input after search
+        setCurrentPage(0); // Reset to first page when searching
+      } catch (error) {
+        console.error("Search failed", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -138,6 +147,7 @@ const App = () => {
   };
 
   return (
+
     <div className="container" style={{ 
       background: theme.bg,
       transition: 'background 1s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -165,14 +175,22 @@ const App = () => {
         <motion.button 
           whileTap={{ scale: 0.9 }}
           onClick={handleSearch}
+          disabled={isLoading}
           className="glass" 
           style={{ 
-            padding: '10px', border: `1px solid ${theme.subtext}`, cursor: 'pointer', 
+            padding: '10px', border: `1px solid ${theme.subtext}`, cursor: isLoading ? 'wait' : 'pointer', 
             color: theme.text, background: theme.glass, display: 'flex', alignItems: 'center' 
           }}
         >
-          <Search size={18} />
+          {isLoading ? (
+            <Loader size={18} className="spin-animation" style={{ animation: 'spin 1s linear infinite' }} />
+          ) : (
+            <Search size={18} />
+          )}
         </motion.button>
+        <style>{`
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `}</style>
       </div>
 
       {/* Progress Indicators */}
